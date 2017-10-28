@@ -1,0 +1,175 @@
+---
+title: "Meta-analysis cheat sheet"
+author: "Joe Hilgard"
+date: "October 28, 2017"
+output: html_document
+---
+
+Meta-analysis is the process of taking an effect size and its standard error from every study in the literature.
+
+Rules of meta-analysis:
+
+1. All effect sizes must be relevant and competent tests of the hypothesis.
+2. All effect sizes must involve a single degree of freedom in the numerator (e.g., a two-sample t-test or the interaction term from a $2\times2$ ANOVA).
+	+ If you have more than one degree of freedom in the numerator, make the appropriate contrast(s) that have one degree of freedom.
+3. Each row is one effect size.
+	+ Multiple contrasts within one study have the same study name, same outcome name, different contrast name.
+	+ Multiple outcomes within one study have the same study name, same contrast name, different outcome name.
+	
+Your R tools:
+The functions you will use come in packages known as "libraries". Libraries do not come standard with R -- they are developed and shared by other R users. 
+The libraries you need are metafor, compute.es, and my homemade package "hilgard" which has a function for pooling standard deviations.
+You load them like this:
+
+```{r, message=F}
+library(metafor)
+library(compute.es)
+library(hilgard)
+```
+
+# Two-sample t-tests
+In a two sample t-test, the means of two groups are compared. This is the simplest case you will deal with.
+
+> Participants in the treatment group (n = 51, M = 7.4, SD = 2.3) gave higher ratings than participants in the control group (n = 48, M = 5.7, SD = 1.7), t(97) = 3.96, p < .001.
+
+Compute.es has the functions fes() and tes(), useful for converting a test statistic into an effect size. Using this, we can get the effect size directly from the t-statistic:
+
+```{r}
+tes(3.96, 51, 48)
+```
+
+You can reduce the amount of output by adding the argument "verbose = FALSE" and then retrieving d and var.d manually with the $ operator.
+```{r}
+es1 <- tes(3.96, 51, 48, verbose = F)
+es1$d; es1$var.d
+```
+
+Note also that it can be a good idea to ask for more digits to be printed so as to avoid rounding error, especially when the sample size is large.
+```{r}
+es2 <- tes(16.7, 5000, 5000, verbose = F)
+es2$d; es2$var.d
+# var.d = 0 will screw everything up because that implies a sample size of Infinity
+es2 <- tes(16.7, 5000, 5000, verbose = F, dig = 8)
+es2$d; es2$var.d
+# that's more like it. .0004 is small, but it's not zero.
+```
+
+# 2×2 ANOVA
+ANOVA is just a series of simultaneous t-statistics. Imagine we are testing two factors. One has levels A and B, the other has levels 1 and 2. Fully crossed, they look like this:
+
+. | A  | B
+-----------
+1 | A1 | B1 
+2 | A2 | B2
+
+Three effects are usually reported: A main effect of A vs B, a main effect of 1 vs 2, and an interaction of the two factors.
+
+Each of these is just a contrast between the averages of two groups.
+
+The main effect of A vs B:
+. | A  | B
+-----------
+1 | +1 | -1 
+2 | +1 | -1
+
+The main effect of 1 vs 2:
+. | A  | B
+-----------
+1 | +1 | +1 
+2 | -1 | -1
+
+The interaction of the two factors:
+. | A  | B
+-----------
+1 | +1 | -1 
+2 | -1 | +1
+
+Usually the text will report the F- or t-test associated with the effect you're interested in. But sometimes it won't. See below under "Effect size from summary statistics" for how to compute an effect size from scratch.
+
+## Main effects
+An F-statistic with one denominator degree of freedom is just a squared t-statistic. You can use fes() on F-statistics.
+
+> There was a significant main effect of treatment, F(1, 38) = 19.14, p < .001
+
+```{r}
+# Via f-test
+f1 <- fes(19.14, 20, 20, verbose = F)
+f1$d; f1$var.d
+# Via t-test
+f2 <- tes(sqrt(19.14), 20, 20, verbose = F)
+f2$d; f2$var.d
+# same result
+```
+
+## Interaction test
+Remember that the interaction test is just the contrast
+
+. | A  | B
+--|----|----
+1 | +1 | -1
+2 | -1 | +1
+
+So, the interaction test is comparing (A1 + B2) against (A2 + B1). 
+
+Usually you can just use tes or fes.
+
+> As expected, the MS X Target interaction was significant, F(1, 29) = 4.25, p = .048
+
+```{r}
+t3 <- fes(4.25, 31/2, 31/2, verbose = F)
+t3$d; t3$var.d
+```
+
+Sometimes authors do not report the proper test of the interaction, instead reporting the two "simple slopes". In these cases you will need to calculate the effect size from the summary statistics.
+
+# Effect size from summary statistics
+
+Sometimes it is necessary to calculate the effect from the summary statistics.
+
+> Thinking of death lead to eating more Big Macs (n = 30, M = 3.2, SD = 2) than thinking of pain (n = 31, M = 0.8, SD = 1.2).
+
+We can use the escalc function for this. Just put in the ns, means, and SDs, like so:
+```{r}
+escalc("SMD", 
+       n1i = 31, m1i = 3.2, sd1i = 2, 
+       n2i = 31, m2i = 0.9, sd2i = 1.2)
+```
+
+Sometimes, to make an interaction term, you will need to combine groups:
+
+> Among participants primed by mortality salience, more stones were thrown at a heretic (n = 20, M = 12.4, SD = 4.1) than at a saint (n = 25, M = 6.8, SD = 3.7). Among participants not primed, there was no difference between stones thrown at heretics (n = 23, M = 10.7, SD = 3.9) and stones thrown at saints (n = 21, M = 9.1, SD = 3.3).
+
+We need to combine the MS-heretic and no-prime-saint condition and compare that against the combination of the MS-saint and no-prime-heretic condition.
+
+Combine the means using weighted.mean(), weighting the means by their sample sizes:
+```{r}
+m1 <- weighted.mean(x = c(12.4, 9.1),
+              w = c(20, 21))
+m2 <- weighted.mean(x = c(6.8, 10.7),
+                    w = c(25, 23))
+```
+
+Combine the SDs using pool.sd(), weighting by the sample sizes
+
+```{r}
+sd1 <- pool.sd(sds = c(4.1, 3.3),
+               ns = c(20, 21))
+sd2 <- pool.sd(sds = c(3.7, 3.9),
+               ns = c(25, 23))
+```
+
+Now you can use those combined ns, ms, and sds to get the effect size:
+```{r}
+escalc("SMD", 
+       m1i = m1, sd1i = sd1, n1i = 20+21,
+       m2i = m2, sd2i = sd2, n2i = 25+23)
+```
+
+
+# Complicated designs
+Sometimes you will deal with a more complicated design with more than two groups. You might have several treatment conditions or multiple control conditions. The authors may not report the particular contrast you are interested in.
+
+Determine which cells belong in the contrast, and which do not. Determine which cells need to be averaged together, and which need to be excluded. Then use the techniques shown above to make those averages and create the effect size from those averages.
+
+# Standard deviation and standard error
+Authors sometimes confuse standard 
