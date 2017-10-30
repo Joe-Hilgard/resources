@@ -196,5 +196,28 @@ Disliked| 5.2 (0.5)| 5.6 (0.4) | 5.8 (0.5)
 
 They mention a total N of 90, so we will assume $90/(3 \times 2) = 15$ subjects per cell.
 
+To get the Mortality Salience $\times$ Pain interaction, we need to combine the cells appropriately by hand using weighted.mean(), pool.sd(), then finally, escalc().
+
+First, we focus on the cells we need:
+.       | Death    | Pain
+--------|----------|-----
+Liked   | 7.2 (0.5)| 5.7 (0.5)
+Disliked| 5.2 (0.5)| 5.8 (0.5)
+
+Then we combine the catty-corner cells:
+```{r}
+# Means combined by weighted.mean
+m1 <- weighted.mean(c(7.2, 5.8), c(15, 15))
+m2 <- weighted.mean(c(5.2, 5.7), c(15, 15))
+# SDs combined by pool.sd
+sd1 <- pool.sd(c(0.5, 0.5), c(15, 15))
+sd2 <- pool.sd(c(0.5, 0.5), c(15, 15))
+# effect size
+escalc("SMD",
+       n1i = 15+15, m1i = m1, sd1i = sd1,
+       n2i = 15+15, m2i = m2, sd2i = sd2)
+```
+
+
 # Standard deviation and standard error
 Authors sometimes confuse standard 
