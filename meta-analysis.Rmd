@@ -6,7 +6,7 @@ output: html_document
 
 Meta-analysis is the process of taking an effect size and its standard error from every study in the literature.
 
-Rules of meta-analysis:
+#Rules of meta-analysis:
 
 1. All effect sizes must be relevant and competent tests of the hypothesis.
 2. All effect sizes must involve a single degree of freedom in the numerator (e.g., a two-sample t-test or the interaction term from a $2\times2$ ANOVA).
@@ -15,7 +15,7 @@ Rules of meta-analysis:
 	+ Multiple contrasts within one study have the same study name, same outcome name, different contrast name.
 	+ Multiple outcomes within one study have the same study name, same contrast name, different outcome name.
 	
-Your R tools:
+#Your R tools:
 The functions you will use come in packages known as "libraries". Libraries do not come standard with R -- they are developed and shared by other R users. 
 The libraries you need are metafor, compute.es, and my homemade package "hilgard" which has a function for pooling standard deviations.
 You load them like this:
@@ -37,10 +37,13 @@ Compute.es has the functions fes() and tes(), useful for converting a test stati
 tes(3.96, 51, 48)
 ```
 
-You can reduce the amount of output by adding the argument "verbose = FALSE" and then retrieving d and var.d manually with the $ operator.
+You can reduce the amount of output by adding the argument "verbose = FALSE" and then retrieving d and var.d manually.
 ```{r}
 es1 <- tes(3.96, 51, 48, verbose = F)
+# using the $ operator
 es1$d; es1$var.d
+# using indexing
+es1[, c("d", "var.d")]
 ```
 
 Note also that it can be a good idea to ask for more digits to be printed so as to avoid rounding error, especially when the sample size is large.
@@ -187,6 +190,28 @@ with(spreadsheet,
 Sometimes you will deal with a more complicated design with more than two groups. You might have several treatment conditions or multiple control conditions. The authors may not report the particular contrast you are interested in.
 
 Determine which cells belong in the contrast, and which do not. Determine which cells need to be averaged together, and which need to be excluded. Then use the techniques shown above to make those averages and create the effect size from those averages.
+
+## Example
+Let's work through an example together.
+
+Renkema, Stapel, & van Yperen, 2008. https://pure.uvt.nl/ws/files/1025738/Gowiththe.pdf
+(We realize that many of Stapel's papers have been retracted. This one has not, so we treat it as real data in our meta-analysis and in this example.)
+
+In Study 3, the authors report a 3 (Mortality salience: Death essay, TV essay, dental pain essay) $\times$ 2 (Rating: high-low or low-high) ANOVA.
+
+The authors report an F-test with two degrees of freedom for the interaction.
+> As expected, we did find an interaction effect of mortality salience and likeability on the rating of the drawings F(2, 84) = 3.21, p < .05.
+
+Remember that we cannot use an F-test with more than 1 degree of freedom in the numerator. We only want the 2 (Mortality: Death essay, pain essay) $\times$ 2 (Rating: high-low or low-high) interaction, ignoring the TV essay condition. 
+
+Looking at their Table 1, we get the following means and SDs.
+
+.       | Death    |   TV      | Pain
+--------|----------|-----------|-----
+Liked   | 7.2 (0.5)| 5.6 (0.4) | 5.7 (0.5)
+Disliked| 5.2 (0.5)| 5.6 (0.4) | 5.8 (0.5)
+
+They mention a total N of 90, so we will assume $90/(3 \times 2) = 15$ subjects per cell.
 
 # Standard deviation and standard error
 Authors sometimes confuse standard deviation (SD) with standard error (SE). Standard error is always much smaller than the SD, so confusing the two can lead to misreporting the effect size as much, much bigger than it should be.
