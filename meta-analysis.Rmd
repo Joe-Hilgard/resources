@@ -1,7 +1,6 @@
 ---
 title: "Meta-analysis cheat sheet"
 author: "Joe Hilgard"
-date: "October 28, 2017"
 output: html_document
 ---
 
@@ -21,7 +20,7 @@ The functions you will use come in packages known as "libraries". Libraries do n
 The libraries you need are metafor, compute.es, and my homemade package "hilgard" which has a function for pooling standard deviations.
 You load them like this:
 
-```{r, message=F}
+```{r, message=F, warning=F}
 library(metafor)
 library(compute.es)
 library(hilgard)
@@ -54,11 +53,11 @@ es2$d; es2$var.d
 # that's more like it. .0004 is small, but it's not zero.
 ```
 
-# 2×2 ANOVA
+# 2x2 ANOVA
 ANOVA is just a series of simultaneous t-statistics. Imagine we are testing two factors. One has levels A and B, the other has levels 1 and 2. Fully crossed, they look like this:
 
 . | A  | B
------------
+--|----|----
 1 | A1 | B1 
 2 | A2 | B2
 
@@ -67,20 +66,23 @@ Three effects are usually reported: A main effect of A vs B, a main effect of 1 
 Each of these is just a contrast between the averages of two groups.
 
 The main effect of A vs B:
+
 . | A  | B
------------
+--|----|----
 1 | +1 | -1 
 2 | +1 | -1
 
 The main effect of 1 vs 2:
+
 . | A  | B
------------
+--|----|----
 1 | +1 | +1 
 2 | -1 | -1
 
 The interaction of the two factors:
+
 . | A  | B
------------
+--|----|----
 1 | +1 | -1 
 2 | -1 | +1
 
@@ -165,6 +167,21 @@ escalc("SMD",
        m2i = m2, sd2i = sd2, n2i = 25+23)
 ```
 
+Note that you don't have to run escalc yourself. It is enough to put the means, sds, and ns into the Excel spreadsheet. From there I can run escalc on the whole spreadsheet at once.
+
+```{r}
+spreadsheet <- data.frame("m1" = c(10, 25, 50),
+                          "m2" = c(10, 20, 40),
+                          "sd1" = c(1, 1, 5),
+                          "sd2" = c(1, 3, 5),
+                          "n1" = c(30, 30, 300),
+                          "n2" = c(40, 20, 300))
+spreadsheet
+with(spreadsheet,
+     escalc("SMD", m1i = m1, m2i = m2, sd1i = sd1, sd2i = sd2, n1i = n1, n2i = n2))
+```
+
+
 
 # Complicated designs
 Sometimes you will deal with a more complicated design with more than two groups. You might have several treatment conditions or multiple control conditions. The authors may not report the particular contrast you are interested in.
@@ -172,4 +189,14 @@ Sometimes you will deal with a more complicated design with more than two groups
 Determine which cells belong in the contrast, and which do not. Determine which cells need to be averaged together, and which need to be excluded. Then use the techniques shown above to make those averages and create the effect size from those averages.
 
 # Standard deviation and standard error
-Authors sometimes confuse standard 
+Authors sometimes confuse standard deviation (SD) with standard error (SE). Standard error is always much smaller than the SD, so confusing the two can lead to misreporting the effect size as much, much bigger than it should be.
+
+The relationship between the two is $SE = \frac{SD}{\sqrt{n}}$. SD does not shrink with sample size; SE does. Think about it like this: If you measure the heights of ten people or ten thousand people, that does not change the fact that people have different heights. But if you measure the heights of ten people, your sampling error is big, and if you measure the heights of ten thousand people, your sampling error is small.
+
+If we have reason to believe that the SE was reported as the SD, we can use algebra to solve for the SD. This gives us $SD = SE \times \sqrt{n}$.
+
+
+# Backsolving for SDs or SEs from test statistics
+Sometimes authors will report just a table of means with one ANOVA test besides the one we're interested in (e.g., the interaction term, when we're interested in a main or simple effect).
+
+I think there's a way to backsolve for SDs / SEs in this circumstance, but I can't remember it.
