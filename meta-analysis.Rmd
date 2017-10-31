@@ -184,6 +184,16 @@ with(spreadsheet,
      escalc("SMD", m1i = m1, m2i = m2, sd1i = sd1, sd2i = sd2, n1i = n1, n2i = n2))
 ```
 
+## Checking effect sizes from summary statistics
+Once you have d and var.d, you can make your own t-statistic like this:
+
+$t = \frac{d}{\sqrt(var.d)}$
+
+You can then check if that $t$-value gives you a p-value in the right ballpark with pt():
+```{r}
+t <- abs(.538/sqrt(.047))
+2*pt(t, df = 80, lower.tail = F)
+```
 
 
 # Complicated designs
@@ -246,7 +256,16 @@ escalc("SMD",
        n2i = 15+15, m2i = m2, sd2i = sd2)
 ```
 
-Here we see that this yields d = 2.10 with var.d = .10, equal to sd.d = 0.32. This would yield a much, much more significant result. Perhaps the authors have confused standard deviation for standard error. Let's talk about how to fix that.
+Here we see that this yields d = 2.10 with var.d = .10, equal to sd.d = 0.32. Let's check the p-value.
+
+```{r}
+t <- 2.10/sqrt(.10)
+2*pt(t, 58, lower.tail = F)
+```
+
+p < .0000001! Surely the effect is not this significant. 
+
+Perhaps the authors have confused standard deviation for standard error. Let's talk about how to fix that.
 
 # Standard deviation and standard error
 Authors sometimes confuse standard deviation (SD) with standard error (SE). Standard error is always much smaller than the SD, so confusing the two can lead to misreporting the effect size as much, much bigger than it should be.
