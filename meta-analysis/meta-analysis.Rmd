@@ -184,6 +184,16 @@ with(spreadsheet,
      escalc("SMD", m1i = m1, m2i = m2, sd1i = sd1, sd2i = sd2, n1i = n1, n2i = n2))
 ```
 
+## Checking effect sizes from summary statistics
+Once you have d and var.d, you can make your own t-statistic like this:
+
+$t = \frac{d}{\sqrt(var.d)}$
+
+You can then check if that $t$-value gives you a p-value in the right ballpark with pt():
+```{r}
+t <- abs(.538/sqrt(.047))
+2*pt(t, df = 80, lower.tail = F)
+```
 
 
 # Complicated designs
@@ -216,12 +226,20 @@ They mention a total N of 90, so we will assume $90/(3 \times 2) = 15$ subjects 
 To get the Mortality Salience $\times$ Pain interaction, we need to combine the cells appropriately by hand using weighted.mean(), pool.sd(), then finally, escalc().
 
 First, we focus on the cells we need:
+
 .       | Death    | Pain
---------|----------|-----
+--------|----------|----------
 Liked   | 7.2 (0.5)| 5.7 (0.5)
 Disliked| 5.2 (0.5)| 5.8 (0.5)
 
-Then we combine the catty-corner cells:
+We remember that we are interested in the interaction term, which means we must combine the diagonal cells:
+
+.       | Death    | Pain
+--------|----------|----------
+Liked   | +1 | -1
+Disliked| +1 | -1
+
+We do that using weighted.mean for the means and pool.sd for the sds:
 ```{r}
 # Means combined by weighted.mean
 m1 <- weighted.mean(c(7.2, 5.8), c(15, 15))
@@ -229,12 +247,25 @@ m2 <- weighted.mean(c(5.2, 5.7), c(15, 15))
 # SDs combined by pool.sd
 sd1 <- pool.sd(c(0.5, 0.5), c(15, 15))
 sd2 <- pool.sd(c(0.5, 0.5), c(15, 15))
-# effect size
+```
+
+With the combined means, sds, and ns, we are ready to plug everything into escalc:
+```{r}
 escalc("SMD",
        n1i = 15+15, m1i = m1, sd1i = sd1,
        n2i = 15+15, m2i = m2, sd2i = sd2)
 ```
 
+Here we see that this yields d = 2.10 with var.d = .10, equal to sd.d = 0.32. Let's check the p-value.
+
+```{r}
+t <- 2.10/sqrt(.10)
+2*pt(t, 58, lower.tail = F)
+```
+
+p < .0000001! Surely the effect is not this significant. 
+
+Perhaps the authors have confused standard deviation for standard error. Let's talk about how to fix that.
 
 # Standard deviation and standard error
 Authors sometimes confuse standard deviation (SD) with standard error (SE). Standard error is always much smaller than the SD, so confusing the two can lead to misreporting the effect size as much, much bigger than it should be.
@@ -243,8 +274,24 @@ The relationship between the two is $SE = \frac{SD}{\sqrt{n}}$. SD does not shri
 
 If we have reason to believe that the SE was reported as the SD, we can use algebra to solve for the SD. This gives us $SD = SE \times \sqrt{n}$.
 
+Returning to our example from Renkema et al. (2008), let's use the SEs and ns to get the actual SD.
+
+```{r}
+# Remember, SD = SE * sqrt(n)
+# Study reported cell sizes of 15, cell SEs of 0.5
+0.5*sqrt(15)
+# Let's use this 1.94 in pool.sd
+sd1 <- pool.sd(c(1.94, 1.94), c(15, 15))
+sd2 <- pool.sd(c(1.94, 1.94), c(15, 15))
+# Now try escalc again with this new value
+escalc("SMD",
+       n1i = 15+15, m1i = m1, sd1i = sd1,
+       n2i = 15+15, m2i = m2, sd2i = sd2)
+```
+This looks like a much closer match to the p-value they reported.
 
 # Backsolving for SDs or SEs from test statistics
 Sometimes authors will report just a table of means with one ANOVA test besides the one we're interested in (e.g., the interaction term, when we're interested in a main or simple effect).
 
 I think there's a way to backsolve for SDs / SEs in this circumstance, but I can't remember it.
+
