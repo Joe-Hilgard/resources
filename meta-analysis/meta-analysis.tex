@@ -1,0 +1,46 @@
+\title{Meta-analysis Cheat Sheet}
+\author{Joe Hilgard}
+\documentclass{article}
+\begin{document}
+\maketitle
+
+\begin{center}
+Rules of meta-analysis:
+\end{center}
+
+\begin{enumerate}
+\item All effect sizes must be relevant and competent tests of the hypothesis.
+\item All effect sizes must involve a single degree of freedom in the numerator (e.g., a two-sample t-test or the interaction term from a $2\times2$ ANOVA).
+	\begin{enumerate}
+	\item If you have more than one degree of freedom in the numerator, make the appropriate contrast(s) that have one degree of freedom.
+	\end{enumerate}
+\item Each row is one effect size.
+	\begin{enumerate}
+	\item Multiple contrasts within one study have the same study name, same outcome name, different contrast name.
+	\item Multiple outcomes within one study have the same study name, same contrast name, different outcome name.
+	\end{enumerate}
+\end{enumerate}
+
+\section{Cohen's d}
+Cohen's d is an effect size for the difference between two categorical groups in some continuous outcome.
+When running a $2\times2$ ANOVA, Cohen's d is still applicable because the interaction term is essentially comparing two groups. A1 and B2 get +1 contrast weights and A2 and B1 get -1 contrast weights. You end up with the test $(A1 + B2) - (A2 + B1)$.
+
+How to calculate Cohen's $d$.
+\begin{equation}
+d = \frac{\bar{X}_{1} - \bar{X}_{2}}{S_{within}}
+\end{equation}
+$\bar{X}_{1}$ is the mean of group 1. $\bar{X}_{2}$ is the mean of group 2. $S_{within}$ is the pooled standard deviation. You can get the pooled standard deviation function by loading the {\tt hilgard} library in R and using the {\tt pool.sd()} function.
+
+
+Using {\tt escalc}
+Load the {\tt metafor} library in R.
+escalc(method = "SMD", m1i = 10.4, m2i = 8.1, sd1i = 2, sd2i = 1.6, n1i = 50, n2i = 45)
+Note that "SMD" is case-sensitive. It will not work if you type in "smd".
+In the case of a complex contrast or an interactionterm, you may need to pool some groups to reduce things to just two means, two SDs, and two sample sizes.
+Take the weighted average of the cell means.
+weighted.mean(x = c(11.3, 15.2), w = (25, 26)
+Make the pooled sd of the cells.
+pool.sd(sds = c(2.1, 1.8), ns = 25, 26)
+
+
+\end{document}

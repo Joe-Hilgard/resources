@@ -1,0 +1,56 @@
+---
+title: "R Guide to ANOVA"
+author: "Joe Hilgard"
+date: "December 28, 2017"
+output: html_document
+---
+
+Working with factors in R can be unpleasant. Additionally, it is not always clear what the output means when you run summary() or car::Anova() on an lm() or aov() object.
+
+This guide is meant to clarify a few sticking points in working with factors. We will use the mtcars dataset as an example throughout.
+
+mtcars has two 0, 1 columns, vs and am. We will use these as factors so that we can turn it into a 2×2 ANOVA example. 
+
+To make things clearer, we will convert them into text labels. The first text label becomes the label of the first factor level, and the second text label becomes the label of the second factor level.
+
+```{r}
+library(tidyverse)
+dat <- mtcars %>% 
+  mutate(vs = factor(vs, labels = c("v", "s")),
+         am = factor(am, labels = c("automatic", "manual")))
+```
+We can check that this went as planned by comparing the original mtcars columns against the new ones.
+
+```{r}
+data.frame(mtcars$vs, dat$vs, mtcars$am, dat$am) %>% 
+  head()
+```
+
+Okay. Let's just charge on ahead and run our 2x2 ANOVA.
+
+```{r}
+m1 <- lm(mpg ~ am * vs, data = dat)
+summary(m1)
+```
+
+It's important to know that exactly these effects represent. Many users, in my experience, expect the default parameterization to resemble that of ANOVA
+
+```{r}
+m2 <- aov(mpg ~ am * vs, data = dat)
+summary(m2)
+```
+
+"Uh oh!" you say, "aov() and lm() give different p-values! Which is right?" The reason for this is that these coefficients represent different things. aov() yields the main effects of am and vs, but lm(), by default, yields the simple effects.
+
+What's the difference between main and simple effects? A *main effect* is the effect marginalized across all other effects. When we talk about the main effect of a manual transmission (as compared to an automatic transmission), we are implicitly averaging across v-engines and straight-engines. 
+
+A *simple effect* is the effect at a *specific level of the other factors*. Because there are two levels of vs, there are two simple effects of transmission: one simple effect given that the car has a v-engine and another simple effect given that the car has a straight engine.
+
+Why does aov() give the main effect and lm() give the simple effect? And can lm() give the main effect? The diference between these two functions comes down to the *contrasts* --- how R parameterizes the model. By default, lm() uses *dummy codes*, labeling data as 0 or 1 depending on whether it is in the group or not. aov(), on the other hand, uses *contrast codes*, labeling data as -1, 0, or 1 according to its group.
+
+This choice of parameterization has some consequences for what the output means. With dummy codes, the intercept represents the cell mean of some comparison group, and the coefficients are each simple effects. With contrast codes, on the other hand, the intercept represents the grand mean of all observations, and the coefficients are main effects.
+
+
+
+
+It's unclear sometimes what to expect from R's parameterization. Is the first element 0 and the second element 1, as would be expected from a zero-based array? Or is the first element 1 and the second element 0, as you would expect if the last level were treated as a reference group? When are attributes assigned by alphabetical order? numerical order? factor level order?
