@@ -1,7 +1,9 @@
 ---
 title: "Meta-analysis cheat sheet"
 author: "Joe Hilgard"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 Meta-analysis is the process of taking an effect size and its standard error from every study in the literature.
