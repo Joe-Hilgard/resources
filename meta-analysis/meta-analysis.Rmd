@@ -20,7 +20,23 @@ Meta-analysis is the process of taking an effect size and its standard error fro
 #Your R tools:
 The functions you will use come in packages known as "libraries". Libraries do not come standard with R -- they are developed and shared by other R users. 
 The libraries you need are metafor, compute.es, and my homemade package "hilgard" which has a function for pooling standard deviations.
-You load them like this:
+
+You install the official libraries like this:
+
+```{r, message=F, warning=F}
+# Commenting this out b/c of etiquette, uncomment if you intend to run it
+# install.packages(c('metafor', 'compute.es'))
+```
+
+The hilgard package is unofficial and has to be installed via devtools::install_github().
+
+```{r, message=F, warning=F}
+# install.packages('devtools')
+# library(devtools)
+# install_github("Joe-Hilgard/hilgard")
+```
+
+You load all the packages like this:
 
 ```{r, message=F, warning=F}
 library(metafor)
@@ -265,7 +281,7 @@ t <- 2.10/sqrt(.10)
 2*pt(t, 58, lower.tail = F)
 ```
 
-p < .0000001! Surely the effect is not this significant. 
+*p* < .0000001! Surely the effect is not this significant. 
 
 Perhaps the authors have confused standard deviation for standard error. Let's talk about how to fix that.
 
@@ -290,7 +306,10 @@ escalc("SMD",
        n1i = 15+15, m1i = m1, sd1i = sd1,
        n2i = 15+15, m2i = m2, sd2i = sd2)
 ```
-This looks like a much closer match to the p-value they reported.
+This looks like a much closer match to the *p*-value they reported.
+
+# Extracting means and SDs from a figure
+Sometimes the manuscript doesn't give you the numbers you need, but there is a figure. There exist a number of software tools for extracting means and SDs/SEs from figures. Try [metaDigitize](https://www.biorxiv.org/content/early/2018/01/15/247775) or [webPlotDigitizer](https://automeris.io/WebPlotDigitizer/).
 
 # Backsolving for SDs or SEs from test statistics
 Sometimes authors will report just a table of means with one ANOVA test besides the one we're interested in (e.g., the interaction term, when we're interested in a main or simple effect).

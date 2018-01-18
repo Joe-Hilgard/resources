@@ -140,7 +140,15 @@ $(document).ready(function () {
 </div>
 <div id="your-r-tools" class="section level1">
 <h1>Your R tools:</h1>
-<p>The functions you will use come in packages known as “libraries”. Libraries do not come standard with R – they are developed and shared by other R users. The libraries you need are metafor, compute.es, and my homemade package “hilgard” which has a function for pooling standard deviations. You load them like this:</p>
+<p>The functions you will use come in packages known as “libraries”. Libraries do not come standard with R – they are developed and shared by other R users. The libraries you need are metafor, compute.es, and my homemade package “hilgard” which has a function for pooling standard deviations.</p>
+<p>You install the official libraries like this:</p>
+<pre class="r"><code># Commenting this out b/c of etiquette, uncomment if you intend to run it
+# install.packages(c('metafor', 'compute.es'))</code></pre>
+<p>The hilgard package is unofficial and has to be installed via devtools::install_github().</p>
+<pre class="r"><code># install.packages('devtools')
+# library(devtools)
+# install_github(&quot;Joe-Hilgard/hilgard&quot;)</code></pre>
+<p>You load all the packages like this:</p>
 <pre class="r"><code>library(metafor)
 library(compute.es)
 library(hilgard)</code></pre>
@@ -520,7 +528,7 @@ sd2 &lt;- pool.sd(c(0.5, 0.5), c(15, 15))</code></pre>
 <pre class="r"><code>t &lt;- 2.10/sqrt(.10)
 2*pt(t, 58, lower.tail = F)</code></pre>
 <pre><code>## [1] 1.172872e-08</code></pre>
-<p>p &lt; .0000001! Surely the effect is not this significant.</p>
+<p><em>p</em> &lt; .0000001! Surely the effect is not this significant.</p>
 <p>Perhaps the authors have confused standard deviation for standard error. Let’s talk about how to fix that.</p>
 </div>
 </div>
@@ -543,7 +551,11 @@ escalc(&quot;SMD&quot;,
        n2i = 15+15, m2i = m2, sd2i = sd2)</code></pre>
 <pre><code>##       yi     vi
 ## 1 0.5342 0.0690</code></pre>
-<p>This looks like a much closer match to the p-value they reported.</p>
+<p>This looks like a much closer match to the <em>p</em>-value they reported.</p>
+</div>
+<div id="extracting-means-and-sds-from-a-figure" class="section level1">
+<h1>Extracting means and SDs from a figure</h1>
+<p>Sometimes the manuscript doesn’t give you the numbers you need, but there is a figure. There exist a number of software tools for extracting means and SDs/SEs from figures. Try <a href="https://www.biorxiv.org/content/early/2018/01/15/247775">metaDigitize</a> or <a href="https://automeris.io/WebPlotDigitizer/">webPlotDigitizer</a>.</p>
 </div>
 <div id="backsolving-for-sds-or-ses-from-test-statistics" class="section level1">
 <h1>Backsolving for SDs or SEs from test statistics</h1>
