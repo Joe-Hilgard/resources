@@ -316,3 +316,34 @@ Sometimes authors will report just a table of means with one ANOVA test besides 
 
 I think there's a way to backsolve for SDs / SEs in this circumstance, but I can't remember it.
 
+# Chi-square tests
+Sometimes an article's outcome is dichotomous. In this case, authors will probably report a chi-square test instead of the usual F-test or t-test. We can still turn these into our usual statistics, however, using compute.es::chies(). Just remember that the chi-square should have only one degree of freedom.
+
+```{r}
+chi1 <- chies(chi.sq = 10.76,
+      n = 72,
+      verbose = F)
+chi1$d; chi1$var.d
+```
+
+You can also make the effect size from the cell counts with metafor::escalc. Just put in the cell frequencies for the 2x2 table as requested. See ?escalc, subheading "Measures for Dichotomous Variables." 
+
+```{r, error = T}
+escalc("SMD",
+       ai = 20, bi = 17,
+       ci = 7, di = 28)
+```
+R doesn't seem to like it when we ask it to calculate the SMD directly. We have to ask it to transform the odds ratio into a *d* through either the probit, normal, or logistic distribution.
+
+```{r}
+escalc("PBIT",
+       ai = 20, bi = 17,
+       ci = 7, di = 28)
+escalc("OR2DN",
+       ai = 20, bi = 17,
+       ci = 7, di = 28)
+escalc("OR2DL",
+       ai = 20, bi = 17,
+       ci = 7, di = 28)
+```
+Thankfully these don't vary *too* much, but I would like to know more about the assumptions involved. Let's pick one and stick to it for now. How about... "OR2DN".
