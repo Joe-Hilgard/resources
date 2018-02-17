@@ -5,6 +5,10 @@ date: "December 28, 2017"
 output: html_document
 ---
 
+https://stackoverflow.com/questions/45140783/how-to-transform-a-string-into-a-factor-and-sets-contrasts-using-dplyr-magrittr
+
+https://pagepiccinini.com/2016/03/18/contrast-coding-with-three-level-variables/
+
 Working with factors in R can be unpleasant. Additionally, it is not always clear what the output means when you run summary() or car::Anova() on an lm() or aov() object.
 
 This guide is meant to clarify a few sticking points in working with factors. We will use the mtcars dataset as an example throughout.
